@@ -1,9 +1,5 @@
-
-from board import BoardGUI
-
-def main():
-    game = BoardGUI(14, 14)
-    game.run()
+from board import GameUI
 
 if __name__ == "__main__":
-    main()
+    game_ui = GameUI(15, 15)
+    game_ui.run()
