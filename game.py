@@ -1,6 +1,4 @@
 from copy import deepcopy
-from collections import deque
-
 
 class Game:
     def __init__(self, rows, cols, board_data):
@@ -27,11 +25,10 @@ class Game:
         return True
 
     def simulate_move(self, _row, _col):
-        cloned_game = deepcopy(self)
         new_states = []
 
-        for idx, player in enumerate(cloned_game.players):
-            if cloned_game.reach_goal[idx]:
+        for idx, player in enumerate(self.players):
+            if self.reach_goal[idx]:
                 continue
 
             current_row, current_col = player["position"]
@@ -40,29 +37,30 @@ class Game:
                 next_row = current_row + _row
                 next_col = current_col + _col
 
-                if not cloned_game.is_valid_move(next_row, next_col, idx):
+                if not self.is_valid_move(next_row, next_col, idx):
                     break
 
                 current_row, current_col = next_row, next_col
 
-                if (current_row, current_col) == cloned_game.goals[idx]["position"]:
-                    cloned_game.reach_goal[idx] = True
+                if (current_row, current_col) == self.goals[idx]["position"]:
+                    self.reach_goal[idx] = True
                     break
 
             if (current_row, current_col) != player["position"]:
+                cloned_game = deepcopy(self)
                 cloned_game.players[idx]["position"] = (current_row, current_col)
-                new_states.append(deepcopy(cloned_game))
+                new_states.append(cloned_game)
 
         return new_states
 
-    def solve_with_bfs(self):
-        initial_game = deepcopy(self)
-        queue = deque([(initial_game, [])])
+    def solve_with_dfs(self):
+        initial_state = deepcopy(self)
+        stack = [(initial_state, [])]
         visited = set()
         nodes_visited = 0
 
-        while queue:
-            current_game, path = queue.popleft()
+        while stack:
+            current_game, path = stack.pop()
             nodes_visited += 1
 
             if all(current_game.reach_goal):
@@ -76,11 +74,10 @@ class Game:
             for move_row, move_col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 new_states = current_game.simulate_move(move_row, move_col)
                 for new_state in new_states:
-                    queue.append((new_state, path + [current_game]))
+                    stack.append((new_state, path + [current_game]))
 
         return None, nodes_visited
 
     def get_state_hash(self, game):
         players_positions = tuple(player["position"] for player in game.players)
         return (players_positions, tuple(game.reach_goal))
-

@@ -1,7 +1,6 @@
 import tkinter as tk
-from copy import deepcopy
 from game import Game
-
+from copy import deepcopy
 
 class GameUI:
     def __init__(self, rows, cols):
@@ -13,10 +12,10 @@ class GameUI:
                           (1, 0), (1, 3), (1, 7), (2, 0), (2, 7), (3, 0), (3, 7), (4, 0), (4, 1), (4, 2),
                           (4, 3), (4, 5), (4, 6), (4, 7), (5, 3), (5, 4), (5, 5)],
                 "players": [
-                    {"position": (2, 1), "color": "blue"}
+                    {"position": (2, 1), "color": "green"}
                 ],
                 "goals": [
-                    {"position": (4, 4), "color": "blue"}
+                    {"position": (4, 4), "color": "green"}
                 ]
             },
         ]
@@ -25,17 +24,17 @@ class GameUI:
         self.game = Game(rows, cols, deepcopy(self.boards[self.current_board]))
 
         self.window = tk.Tk()
-        self.window.title("Bfs")
+        self.window.title("Dfs")
         self.canvas = tk.Canvas(self.window, width=cols * 50, height=rows * 50)
         self.canvas.pack()
 
-        self.auto_play_button = tk.Button(self.window, text="Play bfs", command=self.auto_play)
+        self.auto_play_button = tk.Button(self.window, text="Play dfs", command=self.auto_play)
         self.auto_play_button.pack()
 
         self.update_board()
 
     def auto_play(self):
-        solution_path, nodes_visited = self.game.solve_with_bfs()
+        solution_path, nodes_visited = self.game.solve_with_dfs()
         if not solution_path:
             print("Wrong")
             return
