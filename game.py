@@ -1,5 +1,5 @@
 from copy import deepcopy
-
+import heapq
 class Game:
     def __init__(self, rows, cols, board_data):
         self.rows = rows
@@ -81,3 +81,32 @@ class Game:
     def get_state_hash(self, game):
         players_positions = tuple(player["position"] for player in game.players)
         return (players_positions, tuple(game.reach_goal))
+
+
+
+    def solve_with_ucs(self):
+        initial_game = deepcopy(self)
+        priority_queue = [(0, initial_game, [])]  # (التكلفة، الحالة، المسار)
+        visited = set()
+        nodes_visited = 0
+
+        while priority_queue:
+            current_cost, current_game, path = heapq.heappop(priority_queue)
+            nodes_visited += 1
+
+            if all(current_game.reach_goal):
+                return path + [current_game], nodes_visited
+
+            state_hash = self.get_state_hash(current_game)
+            if state_hash in visited:
+                continue
+            visited.add(state_hash)
+
+            for move_row, move_col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                new_states = current_game.simulate_move(move_row, move_col)
+                for new_state in new_states:
+                    new_cost = current_cost + 1
+                    new_state_hash = self.get_state_hash(new_state)  # استخدام التجزئة بدلاً من الكائن
+                    heapq.heappush(priority_queue, (new_cost, new_state_hash, path + [current_game]))
+
+        return None, nodes_visited
