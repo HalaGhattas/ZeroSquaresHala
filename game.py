@@ -78,26 +78,22 @@ class Game:
 
         return None, nodes_visited
 
-    def get_state_hash(self, game):
-        players_positions = tuple(player["position"] for player in game.players)
-        return (players_positions, tuple(game.reach_goal))
-
-
 
     def solve_with_ucs(self):
-        initial_game = deepcopy(self)
-        priority_queue = [(0, initial_game, [])]  # (التكلفة، الحالة، المسار)
+        initial_state = deepcopy(self)
+        #the cost is 1 
+        priority_queue = [(1, initial_state, [])]  
         visited = set()
         nodes_visited = 0
 
         while priority_queue:
-            current_cost, current_game, path = heapq.heappop(priority_queue)
+            cost, current_game, path = heapq.heappop(priority_queue)
             nodes_visited += 1
 
             if all(current_game.reach_goal):
                 return path + [current_game], nodes_visited
 
-            state_hash = self.get_state_hash(current_game)
+            state_hash = self.get_state_hash(current_game) 
             if state_hash in visited:
                 continue
             visited.add(state_hash)
@@ -105,8 +101,12 @@ class Game:
             for move_row, move_col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 new_states = current_game.simulate_move(move_row, move_col)
                 for new_state in new_states:
-                    new_cost = current_cost + 1
-                    new_state_hash = self.get_state_hash(new_state)  # استخدام التجزئة بدلاً من الكائن
-                    heapq.heappush(priority_queue, (new_cost, new_state_hash, path + [current_game]))
+                    new_cost = cost + 1  
+                    heapq.heappush(priority_queue, (new_cost, new_state, path + [current_game]))
 
         return None, nodes_visited
+    
+    def get_state_hash(self,game):
+        players_positions = tuple(player["position"] for player in game.players)
+        return (players_positions, tuple(game.reach_goal))
+ 
