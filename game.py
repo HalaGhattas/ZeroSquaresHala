@@ -109,4 +109,39 @@ class Game:
     def get_state_hash(self,game):
         players_positions = tuple(player["position"] for player in game.players)
         return (players_positions, tuple(game.reach_goal))
+    
+    
+    
+    def dfs_r(self):
+        def dfs(current_game, path, visited):
+            nonlocal nodes_visited
+
+            nodes_visited += 1
+
+    
+            if all(current_game.reach_goal):
+                return path + [current_game]
+
+            state_hash = current_game.get_state_hash()
+            if state_hash in visited:
+                return None
+            visited.add(state_hash)
+
+        
+            for move_row, move_col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                new_states = current_game.simulate_move(move_row, move_col)
+                for new_state in new_states:
+                    result = dfs(new_state, path + [current_game], visited)
+                    if result is not None:
+                        return result
+
+            visited.remove(state_hash) 
+            return None
+
+        initial_state = deepcopy(self)
+        nodes_visited = 0
+        visited = set()
+    
+        return dfs(initial_state, [], visited), nodes_visited
+
  

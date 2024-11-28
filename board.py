@@ -105,14 +105,14 @@ class GameUI:
         self.game = Game(rows, cols, deepcopy(self.boards[self.current_board]))
 
         self.window = tk.Tk()
-        self.window.title("UCS")
+        self.window.title("DFS R")
         self.canvas = tk.Canvas(self.window, width=cols * 50, height=rows * 40)
         self.canvas.pack()
 
         self.switch_board_button = tk.Button(self.window, text="Switch Board", command=self.switch_board)
         self.switch_board_button.pack()
 
-        self.auto_play_button = tk.Button(self.window, text="Play UCS", command=self.auto_play)
+        self.auto_play_button = tk.Button(self.window, text="Play DFS R", command=self.auto_play)
         self.auto_play_button.pack()
 
         self.update_board()
@@ -123,7 +123,7 @@ class GameUI:
         self.update_board()
 
     def auto_play(self):
-        solution_path, nodes_visited = self.game.solve_with_ucs()
+        solution_path, nodes_visited = self.game.dfs_r()
         if not solution_path:
             print("Wrong")
             return
