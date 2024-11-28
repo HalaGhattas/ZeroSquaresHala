@@ -1,3 +1,4 @@
+import heapq
 from copy import deepcopy
 
 class Game:
@@ -8,6 +9,12 @@ class Game:
         self.goals = deepcopy(board_data["goals"])
         self.players = deepcopy(board_data["players"])
         self.reach_goal = [False] * len(board_data["players"])
+
+    def __lt__(self, other):
+        return self.get_cost() < other.get_cost()
+
+    def get_cost(self):
+        return sum(1 for player in self.players if not self.reach_goal[self.players.index(player)])
 
     def is_won(self):
         return all(self.reach_goal)
@@ -45,32 +52,38 @@ class Game:
                 new_states.append(cloned_game)
         return new_states
 
-    def solve_with_dfs(self):
+    def solve_with_ucs(self):
+        priority_queue = []
         visited = set()
-        nodes_visited = [0]
-        path = []
+        nodes_visited = 0
 
-        def dfs(current_game):
-            nodes_visited[0] += 1
-            if all(current_game.reach_goal):
-                return True
+        initial_state = deepcopy(self)
+        heapq.heappush(priority_queue, (0, initial_state))
+        state_to_path = {self.get_state_hash(initial_state): []}
+
+        while priority_queue:
+            cost, current_game = heapq.heappop(priority_queue)
+            nodes_visited += 1
+
+            if current_game.is_won():
+                return state_to_path[self.get_state_hash(current_game)], nodes_visited
+
             state_hash = self.get_state_hash(current_game)
             if state_hash in visited:
-                return False
+                continue
             visited.add(state_hash)
+
             for move_row, move_col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 new_states = current_game.simulate_move(move_row, move_col)
                 for new_state in new_states:
-                    path.append(new_state)
-                    if dfs(new_state):
-                        return True
-                    path.pop()
-            return False
+                    new_cost = cost + 1
+                    new_state_hash = self.get_state_hash(new_state)
 
-        initial_state = deepcopy(self)
-        if dfs(initial_state):
-            return path, nodes_visited[0]
-        return None, nodes_visited[0]
+                    if new_state_hash not in visited:
+                        heapq.heappush(priority_queue, (new_cost, new_state))
+                        state_to_path[new_state_hash] = state_to_path[state_hash] + [new_state]
+
+        return None, nodes_visited
 
     def get_state_hash(self, game):
         players_positions = tuple(player["position"] for player in game.players)

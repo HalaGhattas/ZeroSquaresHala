@@ -1,6 +1,5 @@
 import tkinter as tk
 from game import Game
-from copy import deepcopy
 
 class GameUI:
     def __init__(self, rows, cols):
@@ -21,20 +20,20 @@ class GameUI:
         ]
 
         self.current_board = 0
-        self.game = Game(rows, cols, deepcopy(self.boards[self.current_board]))
+        self.game = Game(rows, cols, self.boards[self.current_board])
 
         self.window = tk.Tk()
-        self.window.title("DFS R Game")
+        self.window.title("UCS Game")
         self.canvas = tk.Canvas(self.window, width=cols * 50, height=rows * 50)
         self.canvas.pack()
 
-        self.auto_play_button = tk.Button(self.window, text="Play DFS R", command=self.auto_play)
+        self.auto_play_button = tk.Button(self.window, text="Play UCS", command=self.auto_play)
         self.auto_play_button.pack()
 
         self.update_board()
 
     def auto_play(self):
-        solution_path, nodes_visited = self.game.solve_with_dfs()
+        solution_path, nodes_visited = self.game.solve_with_ucs()
         if not solution_path:
             print("No solution found.")
             return
@@ -51,7 +50,7 @@ class GameUI:
             row_str = ""
             for col in range(self.game.cols):
                 if (row, col) in state.walls:
-                    row_str += "W "
+                    row_str += "# "
                 elif any(goal["position"] == (row, col) for goal in state.goals):
                     row_str += "G "
                 elif any(player["position"] == (row, col) for player in state.players):
