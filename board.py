@@ -6,34 +6,45 @@ class GameUI:
         self.rows = rows
         self.cols = cols
         self.boards = [
-            {
-                "walls": [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
-                          (1, 0), (1, 3), (1, 7), (2, 0), (2, 7), (3, 0), (3, 7), (4, 0), (4, 1), (4, 2),
-                          (4, 3), (4, 5), (4, 6), (4, 7), (5, 3), (5, 4), (5, 5)],
+               {
+                "walls": [ (0, 1), (0, 2), (0, 3), (0, 4), (0, 5),
+                           (1, 0), (1, 1),(1, 5), (1, 6), (1, 7), (1, 8), (1, 9), 
+                           (2,0),(2,5),(2,6),(2,9),
+                           (3, 0), (3,9),(3, 10),
+                           (4, 0), (4, 4), (4, 5), (4, 6), (4, 10),
+                           (5, 0), (5, 9), (5, 10),
+                           (6, 0), (6, 1),(6, 4),(6, 5),(6, 6),(6, 7),(6, 8),(6, 9),
+                           (7,1),(7,2),(7,3),(7,4),
+                           ],
                 "players": [
-                    {"position": (2, 1), "color": "green"}
+                    {"position": (1, 2), "color": "red"},
+                    {"position": (6, 2), "color": "blue"}
                 ],
                 "goals": [
-                    {"position": (4, 4), "color": "green"}
+                    {"position": (2, 7), "color": "blue"},
+                    {"position": (5, 8), "color": "red"}
                 ]
-            },
+            }  
+          
         ]
+        
+        
 
         self.current_board = 0
         self.game = Game(rows, cols, self.boards[self.current_board])
 
         self.window = tk.Tk()
-        self.window.title("UCS Game")
+        self.window.title("A star game")
         self.canvas = tk.Canvas(self.window, width=cols * 50, height=rows * 50)
         self.canvas.pack()
 
-        self.auto_play_button = tk.Button(self.window, text="Play UCS", command=self.auto_play)
+        self.auto_play_button = tk.Button(self.window, text="Play A star", command=self.auto_play)
         self.auto_play_button.pack()
 
         self.update_board()
 
     def auto_play(self):
-        solution_path, nodes_visited = self.game.solve_with_ucs()
+        solution_path, nodes_visited = self.game.solve_with_a_star()
         if not solution_path:
             print("No solution found.")
             return

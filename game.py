@@ -59,3 +59,44 @@ class Game:
             for j in self.goals:
                 if self.players[i]["color"] == self.goals[j]["color"]:
                     return abs(self.player["position"] - self.goals["position"]) 
+                
+
+
+    def solve_with_a_star(self):
+        priority_queue = []
+        visited = set()
+        nodes_visited = 0
+
+        initial_state = deepcopy(self)
+        heapq.heappush(priority_queue, (( 1 + self.heuristic), initial_state))
+        state_to_path = {self.get_state_hash(initial_state): []}
+
+        while priority_queue:
+            cost, current_game = heapq.heappop(priority_queue)
+            nodes_visited += 1
+
+            if current_game.is_won():
+                return state_to_path[self.get_state_hash(current_game)], nodes_visited
+
+            state_hash = self.get_state_hash(current_game)
+            if state_hash in visited:
+                continue
+            visited.add(state_hash)
+
+            for move_row, move_col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                new_states = current_game.simulate_move(move_row, move_col)
+                for new_state in new_states:
+                    new_cost = cost + 1
+                    new_state_hash = self.get_state_hash(new_state)
+
+                    if new_state_hash not in visited:
+                        heapq.heappush(priority_queue, (new_cost, new_state))
+                        state_to_path[new_state_hash] = state_to_path[state_hash] + [new_state]
+
+        return None, nodes_visited
+
+    def get_state_hash(self, game):
+        players_positions = tuple(player["position"] for player in game.players)
+        return (players_positions, tuple(game.reach_goal))
+
+
