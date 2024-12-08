@@ -1,95 +1,117 @@
 import tkinter as tk
+from tkinter import messagebox
+import time
 from game import Game
 
-class GameUI:
-    def __init__(self, rows, cols):
+class GameGUI:
+    def __init__(self, root, rows, cols, board_details):
+        self.root = root
         self.rows = rows
         self.cols = cols
-        self.boards = [
-               {
-                "walls": [ (0, 1), (0, 2), (0, 3), (0, 4), (0, 5),
-                           (1, 0), (1, 1),(1, 5), (1, 6), (1, 7), (1, 8), (1, 9), 
-                           (2,0),(2,5),(2,6),(2,9),
-                           (3, 0), (3,9),(3, 10),
-                           (4, 0), (4, 4), (4, 5), (4, 6), (4, 10),
-                           (5, 0), (5, 9), (5, 10),
-                           (6, 0), (6, 1),(6, 4),(6, 5),(6, 6),(6, 7),(6, 8),(6, 9),
-                           (7,1),(7,2),(7,3),(7,4),
-                           ],
-                "players": [
-                    {"position": (1, 2), "color": "red"},
-                    {"position": (6, 2), "color": "blue"}
-                ],
-                "goals": [
-                    {"position": (2, 7), "color": "blue"},
-                    {"position": (5, 8), "color": "red"}
-                ]
-            }  
-          
-        ]
-        
-        
+        self.cell_size = 50
+        self.game = Game(rows, cols, board_details)
 
-        self.current_board = 0
-        self.game = Game(rows, cols, self.boards[self.current_board])
-
-        self.window = tk.Tk()
-        self.window.title("A star game")
-        self.canvas = tk.Canvas(self.window, width=cols * 50, height=rows * 50)
+        self.canvas = tk.Canvas(root, width=self.cols * self.cell_size, height=self.rows * self.cell_size)
         self.canvas.pack()
 
-        self.auto_play_button = tk.Button(self.window, text="Play A star", command=self.auto_play)
-        self.auto_play_button.pack()
+        self.status_label = tk.Label(root, text="Choose option from  menu", font=("bold", 14))
+        self.status_label.pack()
 
-        self.update_board()
+        self.menu_bar = tk.Menu(root)
+        root.config(menu=self.menu_bar)
 
-    def auto_play(self):
-        solution_path, nodes_visited = self.game.solve_with_a_star()
-        if not solution_path:
-            print("No solution found.")
-            return
-        for state in solution_path:
-            self.game = state
-            self.update_board()
-            self.window.update_idletasks()
-            self.window.after(500)
-            self.print_board(state)
-        print(f"Total nodes visited: {nodes_visited}")
+        game_menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="Game", menu=game_menu)
+        game_menu.add_command(label="Play Manually", command=self.play_manually)
+        game_menu.add_command(label="DFS", command=lambda: self.solve_with_algorithm("DFS"))
+        game_menu.add_command(label="Recursive DFS", command=lambda: self.solve_with_algorithm("Recursive DFS"))
+        game_menu.add_command(label="BFS", command=lambda: self.solve_with_algorithm("BFS"))
+        game_menu.add_command(label="UCS", command=lambda: self.solve_with_algorithm("UCS"))
+        game_menu.add_command(label="Hill Climbing", command=lambda: self.solve_with_algorithm("Hill Climbing"))
+        game_menu.add_command(label="Steepest Hill Climbing",
+                              command=lambda: self.solve_with_algorithm("Steepest Hill Climbing"))
+        game_menu.add_command(label="A*", command=lambda: self.solve_with_algorithm("A*"))
+        game_menu.add_command(label="A* Advanced", command=lambda: self.solve_with_algorithm("A* Advanced"))
+        game_menu.add_command(label="Exit", command=root.quit)
 
-    def print_board(self, state):
-        for row in range(self.game.rows):
-            row_str = ""
-            for col in range(self.game.cols):
-                if (row, col) in state.walls:
-                    row_str += "# "
-                elif any(goal["position"] == (row, col) for goal in state.goals):
-                    row_str += "G "
-                elif any(player["position"] == (row, col) for player in state.players):
-                    row_str += "P "
-                else:
-                    row_str += ". "
-            print(row_str)
-        print()
+        self.draw_board()
 
-    def update_board(self):
+    def draw_board(self, state=None):
         self.canvas.delete("all")
-        for (row, col) in self.game.walls:
-            self.canvas.create_rectangle(
-                col * 50, row * 50, (col + 1) * 50, (row + 1) * 50,
-                fill="black"
-            )
-        for goal in self.game.goals:
-            row, col = goal["position"]
-            self.canvas.create_rectangle(
-                col * 50 + 5, row * 50 + 5, (col + 1) * 50 - 5, (row + 1) * 50 - 5,
-                fill="", outline=goal["color"], width=8
-            )
-        for player in self.game.players:
-            row, col = player["position"]
-            self.canvas.create_rectangle(
-                col * 50 + 10, row * 50 + 10, (col + 1) * 50 - 10, (row + 1) * 50 - 10,
-                fill=player["color"]
-            )
+        if state is None:
+            state = self.game.state
+        for row in range(self.rows):
+            for col in range(self.cols):
+                x1, y1 = col * self.cell_size, row * self.cell_size
+                x2, y2 = x1 + self.cell_size, y1 + self.cell_size
+                if (row, col) in state.walls:
+                    self.canvas.create_rectangle(x1, y1, x2, y2, fill="black", outline="black")
+                elif any((row, col) == goal["position"] for goal in state.goals):
+                    self.canvas.create_rectangle(x1, y1, x2, y2, outline="blue" , width=5)
+                elif any((row, col) == player["position"] for player in state.players):
+                    self.canvas.create_rectangle(x1 + 5, y1 + 5, x2 - 5, y2 - 5, fill="blue", outline="black")
+                else:
+                    self.canvas.create_rectangle(x1, y1, x2, y2, fill="white", outline="black")
 
-    def run(self):
-        self.window.mainloop()
+
+    def play_manually(self):
+        self.status_label.config(text="Use WASD")
+        self.root.bind("<Key>", self.manual_keypress)
+
+    def manual_keypress(self, event):
+        move_map = {
+            "w": (-1, 0),
+            "s": (1, 0),
+            "a": (0, -1),
+            "d": (0, 1),
+        }
+        move = move_map.get(event.keysym.lower())
+        if move:
+            new_states = self.game.simulate_move(self.game.state, *move)
+            if new_states:
+                self.game.state = new_states[0]
+                self.draw_board()
+            if self.game.is_won():
+                self.status_label.config(text="You won!")
+                messagebox.showinfo(" You won!")
+                self.root.unbind("<Key>")
+
+
+    def solve_with_algorithm(self, algorithm):
+        start_time = time.time()
+        if algorithm == "DFS":
+            solution, nodes_visited, _ = self.game.dfs()
+        elif algorithm == "Recursive DFS":
+            solution, visited_states = self.game.dfs_recursive(self.game.state, [], set(), [])
+            nodes_visited = len(visited_states)
+        elif algorithm == "BFS":
+            solution, nodes_visited, _ = self.game.bfs()
+        elif algorithm == "UCS":
+            solution, nodes_visited, _ = self.game.ucs()
+        elif algorithm == "Hill Climbing":
+            solution, nodes_visited, _ = self.game.hill_climbing()
+        elif algorithm == "Steepest Hill Climbing":
+            solution, nodes_visited, _ = self.game.steepest_hill_climbing()
+        elif algorithm == "A*":
+            solution, nodes_visited, _ = self.game.a_star()
+        elif algorithm == "A* Advanced":
+            solution, nodes_visited, _ = self.game.a_star_advanced()
+        else:
+            messagebox.showerror("Error", "Invalid algorithm")
+            return
+        end_time = time.time()
+        #
+        if solution:
+            self.animate_solution(solution)
+            self.status_label.config(
+                text=f"Solution found! Nodes visited: {nodes_visited}, Time: {end_time - start_time:.2f}s")
+        else:
+            self.status_label.config(text="No solution found.")
+
+
+    def animate_solution(self, solution):
+        for state in solution:
+            self.draw_board(state)
+            self.root.update()
+            time.sleep(0.5)
+
